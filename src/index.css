@@ -1,0 +1,23 @@
+:root {
+  --color-bg: #FBF8F3;
+  --color-surface: #FFFFFF;
+  --color-text: #020002;
+  --color-accent-lime: #FF7200;
+  --color-accent-purple: #017187;
+  --color-accent-orange: #F59121;
+  --radius-pill: 999px;
+  --radius-card: 20px;
+  --font-heading: "Inter", "Helvetica Neue", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
