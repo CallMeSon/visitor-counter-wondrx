@@ -79,6 +79,8 @@ async def record_count(payload: CountPayload, db: Session = Depends(get_db)):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+from fastapi.staticfiles import StaticFiles
+
 @app.websocket("/ws/events/{event_id}")
 async def websocket_endpoint(websocket: WebSocket, event_id: int):
     await manager.connect(event_id, websocket)
@@ -87,3 +89,6 @@ async def websocket_endpoint(websocket: WebSocket, event_id: int):
             await websocket.receive_text()
     except WebSocketDisconnect:
         manager.disconnect(event_id, websocket)
+
+app.mount("/", StaticFiles(directory="src/static", html=True), name="static")
+
