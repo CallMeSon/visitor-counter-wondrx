@@ -27,7 +27,7 @@
 - Consumes: `src.db.models.Event`, `src.db.models.CameraConfig`
 - Produces: `EventAggregatorService`, `record_crossing()`, `get_summary()`, `get_trend_history()`
 
-- [ ] **Step 1: Write the failing test for Aggregator Service**
+- [x] **Step 1: Write the failing test for Aggregator Service**
 
 Create `tests/test_aggregator_service.py`:
 ```python
@@ -75,12 +75,12 @@ def test_aggregator_7_cameras_calculation(db_session):
     assert summary["current_inside"] == 32
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pytest tests/test_aggregator_service.py -v`
 Expected: FAIL with `ModuleNotFoundError: No module named 'src.services'`
 
-- [ ] **Step 3: Write minimal EventAggregatorService implementation**
+- [x] **Step 3: Write minimal EventAggregatorService implementation**
 
 Create empty file `src/services/__init__.py`.
 
@@ -156,12 +156,12 @@ class EventAggregatorService:
         ]
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pytest tests/test_aggregator_service.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/services/__init__.py src/services/aggregator.py tests/test_aggregator_service.py
@@ -181,7 +181,7 @@ git commit -m "feat(service): implement EventAggregatorService for metric calcul
 - Consumes: `src.services.aggregator.EventAggregatorService`, `src.db.database.get_db`
 - Produces: FastAPI REST routes and WebSocket Broadcast endpoint `/ws/events/{id}`
 
-- [ ] **Step 1: Write the failing test for API endpoints**
+- [x] **Step 1: Write the failing test for API endpoints**
 
 Create `tests/test_api_endpoints.py`:
 ```python
@@ -234,12 +234,12 @@ def test_api_summary_and_count():
     assert res_updated.json()["current_inside"] == 5
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pytest tests/test_api_endpoints.py -v`
 Expected: FAIL with `ModuleNotFoundError: No module named 'src.api'`
 
-- [ ] **Step 3: Write minimal FastAPI application**
+- [x] **Step 3: Write minimal FastAPI application**
 
 Create empty file `src/api/__init__.py`.
 
@@ -335,12 +335,12 @@ async def websocket_endpoint(websocket: WebSocket, event_id: int):
         manager.disconnect(event_id, websocket)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pytest tests/test_api_endpoints.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/api/__init__.py src/api/app.py tests/test_api_endpoints.py
