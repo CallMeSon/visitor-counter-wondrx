@@ -1,3 +1,5 @@
+import os
+import time
 import cv2
 import requests
 from ultralytics import YOLO
@@ -58,22 +60,24 @@ class CameraStreamProcessor:
         self.window_name = f"AI Visitor Counter - Camera #{self.camera_id}"
 
     def _mouse_callback(self, event, x, y, flags, param):
+        DRAG_RADIUS = 35  # px radius untuk klik endpoint
+
         if event == cv2.EVENT_LBUTTONDOWN:
-            # Check if clicked near p1 or p2 (within 25px radius)
             dist_p1 = ((x - self.line_p1[0]) ** 2 + (y - self.line_p1[1]) ** 2) ** 0.5
             dist_p2 = ((x - self.line_p2[0]) ** 2 + (y - self.line_p2[1]) ** 2) ** 0.5
-            if dist_p1 < 25:
+            if dist_p1 < DRAG_RADIUS:
                 self.dragging_point = 1
-            elif dist_p2 < 25:
+            elif dist_p2 < DRAG_RADIUS:
                 self.dragging_point = 2
-        elif event == cv2.EVENT_MOUSEMOVE and self.dragging_point:
+        elif event == cv2.EVENT_MOUSEMOVE:
             if self.dragging_point == 1:
                 self.line_p1 = (x, y)
+                if self.line_counter:
+                    self.line_counter.line_p1 = self.line_p1
             elif self.dragging_point == 2:
                 self.line_p2 = (x, y)
-            if self.line_counter:
-                self.line_counter.line_p1 = self.line_p1
-                self.line_counter.line_p2 = self.line_p2
+                if self.line_counter:
+                    self.line_counter.line_p2 = self.line_p2
         elif event == cv2.EVENT_LBUTTONUP:
             self.dragging_point = None
 
@@ -94,12 +98,51 @@ class CameraStreamProcessor:
         except Exception as e:
             print(f"⚠️ Failed sending count to API: {e}")
 
+    def send_heartbeat_to_api(self):
+        heartbeat_url = self.api_url.replace("/api/count", "/api/heartbeat")
+        payload = {
+            "event_id": self.event_id,
+            "camera_id": self.camera_id
+        }
+        try:
+            requests.post(heartbeat_url, json=payload, timeout=2.0)
+        except Exception:
+            pass
+
     def run(self):
         print(f"🎥 Starting Camera Processor #{self.camera_id} (Source: {self.source})...")
-        cap = cv2.VideoCapture(self.source)
+
+        if isinstance(self.source, int):
+            cap = cv2.VideoCapture(self.source)
+            if not cap.isOpened() and os.name == 'nt':
+                cap = cv2.VideoCapture(self.source, cv2.CAP_DSHOW)
+        elif isinstance(self.source, str) and self.source.startswith(("rtsp://", "rtmp://", "http://")):
+            os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp|timeout;5000000"
+            cap = cv2.VideoCapture(self.source)
+        else:
+            cap = cv2.VideoCapture(self.source)
 
         if not cap.isOpened():
-            print(f"❌ Cannot open camera source: {self.source}")
+            print(f"\n❌ Gagal membuka sumber kamera: {self.source}")
+            if isinstance(self.source, int):
+                print("💡 PETUNJUK TROUBLESHOOTING WEBCAM:")
+                print("   1. Pastikan webcam/kamera USB tidak sedang dipakai oleh aplikasi lain (Zoom, Teams, Browser, dll).")
+                print("   2. Coba ganti index kamera (misal --source 0 atau --source 1).")
+                print("   3. Jika tidak ada webcam fisik, Anda bisa menggunakan simulasi lalu lintas data tanpa kamera:")
+                print("      python sim_test.py\n")
+            elif isinstance(self.source, str) and self.source.startswith("rtsp://"):
+                print("💡 PETUNJUK TROUBLESHOOTING RTSP:")
+                print("   1. URL 'rtsp://admin:password@192.168.1.50:554/stream' adalah contoh tempat penampung (placeholder).")
+                print("      Ganti dengan IP address, username, password, dan path RTSP asli dari IP Camera Anda.")
+                print("   2. Pastikan PC Anda dan IP Camera berada dalam jaringan lokal yang sama (LAN/WiFi/VPN).")
+                print("   3. Untuk pengujian cepat tanpa IP Camera fisik, gunakan webcam USB/laptop:")
+                print(f"      python camera_runner.py --camera-id {self.camera_id} --source 0")
+                print("   4. Atau jalankan skrip simulasi tanpa kamera sama sekali:")
+                print("      python sim_test.py\n")
+            else:
+                print("💡 PETUNJUK TROUBLESHOOTING FILE VIDEO:")
+                print("   1. Pastikan nama/path file video yang Anda masukkan benar dan file tersedia.")
+                print("   2. Atau jalankan skrip simulasi tanpa kamera sama sekali: python sim_test.py\n")
             return
 
         frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) or 640
@@ -114,15 +157,24 @@ class CameraStreamProcessor:
             custom_coords=self.custom_coords
         )
         self.line_counter = LineCrossCounter(line_p1=self.line_p1, line_p2=self.line_p2)
+        current_orientation = self.orientation  # track active orientation for HUD
 
         if self.show_window:
-            cv2.namedWindow(self.window_name)
-            cv2.setMouseCallback(self.window_name, self._mouse_callback)
+            cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
 
         print(f"📍 Initial Line Coordinates: {self.line_p1} -> {self.line_p2}")
-        print("💡 Tip: Click and drag yellow endpoints with mouse to adjust line in real time!")
+        print("💡 Tombol: [H] Horizontal | [V] Vertikal | [R] Reset Tengah | [Q] Keluar")
+
+        last_heartbeat_time = 0
+        self.send_heartbeat_to_api()
+        mouse_callback_registered = False
 
         while cap.isOpened():
+            now = time.time()
+            if now - last_heartbeat_time >= 5.0:
+                self.send_heartbeat_to_api()
+                last_heartbeat_time = now
+
             success, frame = cap.read()
             if not success:
                 print("End of video stream.")
@@ -160,26 +212,72 @@ class CameraStreamProcessor:
 
             # Draw Virtual Line and Interactive Endpoint Handles
             cv2.line(frame, self.line_p1, self.line_p2, (0, 255, 255), 3)
-            cv2.circle(frame, self.line_p1, 10, (0, 165, 255), -1)
-            cv2.circle(frame, self.line_p2, 10, (0, 165, 255), -1)
+            # Larger circles (radius 15) for easier mouse hit
+            cv2.circle(frame, self.line_p1, 15, (0, 165, 255), -1)
+            cv2.circle(frame, self.line_p2, 15, (0, 165, 255), -1)
+            cv2.circle(frame, self.line_p1, 15, (255, 255, 255), 2)
+            cv2.circle(frame, self.line_p2, 15, (255, 255, 255), 2)
 
             cv2.putText(
                 frame,
-                f"Line #{self.camera_id} (Drag Endpoints)",
-                (min(self.line_p1[0], self.line_p2[0]) + 10, min(self.line_p1[1], self.line_p2[1]) - 10),
+                f"Line #{self.camera_id} | Drag orange dots to adjust",
+                (min(self.line_p1[0], self.line_p2[0]) + 10, min(self.line_p1[1], self.line_p2[1]) - 14),
                 cv2.FONT_HERSHEY_SIMPLEX,
-                0.6,
+                0.55,
                 (0, 255, 255),
                 2
             )
 
+            # Keyboard shortcut hint overlay (bottom-left)
+            hint_lines = [
+                f"Mode: {'HORIZONTAL' if current_orientation == 'horizontal' else 'VERTICAL'}",
+                "[H] Horizontal  [V] Vertikal",
+                "[R] Reset Tengah  [Q] Keluar",
+            ]
+            for i, hint in enumerate(hint_lines):
+                y_pos = frame_height - 15 - (len(hint_lines) - 1 - i) * 22
+                cv2.putText(frame, hint, (10, y_pos),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 3)
+                cv2.putText(frame, hint, (10, y_pos),
+                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+
             if self.show_window:
                 cv2.imshow(self.window_name, frame)
+
+                # Register mouse callback AFTER first imshow so window is fully active
+                if not mouse_callback_registered:
+                    cv2.setMouseCallback(self.window_name, self._mouse_callback)
+                    mouse_callback_registered = True
+
                 key = cv2.waitKey(1) & 0xFF
                 if key == ord('q'):
                     print("User stopped stream.")
                     break
+                elif key == ord('h') or key == ord('H'):
+                    # Snap line to horizontal center
+                    self.line_p1, self.line_p2 = calculate_line_points(
+                        frame_width, frame_height, orientation="horizontal", position=0.5)
+                    self.line_counter.line_p1 = self.line_p1
+                    self.line_counter.line_p2 = self.line_p2
+                    current_orientation = "horizontal"
+                    print(f"[H] Line diset ke HORIZONTAL tengah: {self.line_p1} -> {self.line_p2}")
+                elif key == ord('v') or key == ord('V'):
+                    # Snap line to vertical center
+                    self.line_p1, self.line_p2 = calculate_line_points(
+                        frame_width, frame_height, orientation="vertical", position=0.5)
+                    self.line_counter.line_p1 = self.line_p1
+                    self.line_counter.line_p2 = self.line_p2
+                    current_orientation = "vertical"
+                    print(f"[V] Line diset ke VERTIKAL tengah: {self.line_p1} -> {self.line_p2}")
+                elif key == ord('r') or key == ord('R'):
+                    # Reset line to center with current orientation
+                    self.line_p1, self.line_p2 = calculate_line_points(
+                        frame_width, frame_height, orientation=current_orientation, position=0.5)
+                    self.line_counter.line_p1 = self.line_p1
+                    self.line_counter.line_p2 = self.line_p2
+                    print(f"[R] Line direset ke tengah ({current_orientation}): {self.line_p1} -> {self.line_p2}")
 
         cap.release()
         if self.show_window:
             cv2.destroyAllWindows()
+

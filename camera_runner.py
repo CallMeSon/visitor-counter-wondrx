@@ -15,12 +15,18 @@ def main():
     parser.add_argument("--line-coords", type=str, default=None,
                         help="Custom line coordinates in format 'x1,y1,x2,y2' (e.g. '100,200,500,200')")
     
+    parser.add_argument("--api-url", type=str, default="http://127.0.0.1:8000/api/count",
+                        help="Backend Server API URL (e.g. http://192.168.1.100:8000/api/count)")
+    
     parser.add_argument("--no-window", action="store_true", help="Disable OpenCV video window GUI")
     
     args = parser.parse_args()
 
-    # Convert string "0" to integer 0 for webcam
-    source = 0 if args.source == "0" else args.source
+    # Convert string numeric camera index (e.g. "0", "1") to integer for OpenCV webcam
+    if str(args.source).isdigit():
+        source = int(args.source)
+    else:
+        source = args.source
 
     processor = CameraStreamProcessor(
         camera_id=args.camera_id,
@@ -29,6 +35,7 @@ def main():
         orientation=args.line_orientation,
         position=args.line_position,
         custom_coords=args.line_coords,
+        api_url=args.api_url,
         show_window=not args.no_window
     )
 

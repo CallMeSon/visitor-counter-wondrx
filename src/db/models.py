@@ -27,6 +27,7 @@ class CameraConfig(Base):
     name = Column(String, nullable=False)
     role = Column(String, nullable=False)  # "entry" or "exit"
     rtsp_url = Column(String, nullable=True)
+    last_active_at = Column(DateTime, nullable=True)
 
     event = relationship("Event", back_populates="cameras")
 

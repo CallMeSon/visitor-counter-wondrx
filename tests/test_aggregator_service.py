@@ -39,3 +39,22 @@ def test_aggregator_7_cameras_calculation(db_session):
     assert summary["total_in"] == 40
     assert summary["total_out"] == 8
     assert summary["current_inside"] == 32
+
+def test_reset_counter(db_session):
+    event = Event(name="Reset Test Event", max_capacity=1000)
+    db_session.add(event)
+    db_session.commit()
+
+    entry = CameraConfig(event_id=event.id, name="Entry 1", role="entry")
+    db_session.add(entry)
+    db_session.commit()
+
+    service = EventAggregatorService(db_session, event.id)
+    service.record_crossing(camera_id=entry.id, count=10)
+    assert service.get_summary()["current_inside"] == 10
+
+    reset_res = service.reset_counter()
+    assert reset_res["total_in"] == 0
+    assert reset_res["total_out"] == 0
+    assert reset_res["current_inside"] == 0
+

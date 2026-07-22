@@ -51,3 +51,8 @@ def test_api_summary_and_count():
 
     res_updated = client.get("/api/events/1/summary")
     assert res_updated.json()["current_inside"] == 5
+
+    res_reset = client.post("/api/events/1/reset")
+    assert res_reset.status_code == 200
+    assert res_reset.json()["summary"]["current_inside"] == 0
+

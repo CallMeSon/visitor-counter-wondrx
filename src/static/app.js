@@ -57,6 +57,53 @@ function updateMetrics(summary) {
   document.getElementById('val-inside').innerText = summary.current_inside;
   document.getElementById('val-total-in').innerText = summary.total_in;
   document.getElementById('val-total-out').innerText = summary.total_out;
+
+  if (summary.connected_cameras !== undefined) {
+    const connCountEl = document.getElementById('connected-cam-count');
+    const totalCountEl = document.getElementById('total-cam-count');
+    const summaryConnEl = document.getElementById('cam-summary-connected');
+    const summaryTotalEl = document.getElementById('cam-summary-total');
+
+    if (connCountEl) connCountEl.innerText = summary.connected_cameras;
+    if (totalCountEl) totalCountEl.innerText = summary.total_cameras || 7;
+    if (summaryConnEl) summaryConnEl.innerText = summary.connected_cameras;
+    if (summaryTotalEl) summaryTotalEl.innerText = summary.total_cameras || 7;
+  }
+
+  if (summary.cameras && summary.cameras.length > 0) {
+    renderCamerasList(summary.cameras);
+  }
+}
+
+function renderCamerasList(cameras) {
+  const container = document.getElementById('cameras-container');
+  if (!container) return;
+
+  container.innerHTML = cameras.map(cam => {
+    const isEntry = cam.role === 'entry';
+    const roleTagClass = isEntry ? 'role-entry' : 'role-exit';
+    const roleLabel = isEntry ? 'MASUK' : 'KELUAR';
+    
+    const isConnected = cam.is_connected;
+    const statusClass = isConnected ? 'connected' : 'standby';
+    const dotClass = isConnected ? 'dot-connected' : 'dot-standby';
+    const statusText = isConnected ? 'CONNECTED' : 'STANDBY';
+
+    return `
+      <div class="camera-item">
+        <div class="camera-header">
+          <div class="camera-title">${cam.name}</div>
+          <span class="role-tag ${roleTagClass}">${roleLabel}</span>
+        </div>
+        <div class="camera-meta">
+          <div class="status-badge ${statusClass}">
+            <span class="dot-status ${dotClass}"></span> ${statusText}
+          </div>
+          <div class="cam-count-val">Tercatat: <strong>${cam.count}</strong> orang</div>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 function initWebSocket() {

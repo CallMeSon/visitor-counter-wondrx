@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
   <div class="container">
     <nav class="navbar-pill">
@@ -20,7 +22,7 @@
 
     <header class="hero-section">
       <div class="badge-status">
-        <span class="live-indicator"></span> LIVE UPDATING (7 CAMERAS)
+        <span class="live-indicator"></span> LIVE UPDATING (<span id="connected-cam-count">0</span>/<span id="total-cam-count">7</span> KAMERA CONNECTED)
       </div>
       <h1 class="headline">Jumlah Pengunjung Real-Time</h1>
     </header>
@@ -51,8 +53,23 @@
         </div>
       </div>
     </section>
+
+    <section class="cameras-section">
+      <div class="card cameras-card">
+        <div class="section-header">
+          <h2>📷 Status & Detail Kamera</h2>
+          <div class="camera-summary-badge">
+            Terhubung: <strong id="cam-summary-connected">0</strong> / <span id="cam-summary-total">7</span> Kamera
+          </div>
+        </div>
+        <div class="cameras-grid" id="cameras-container">
+          <!-- Populated dynamically via app.js -->
+        </div>
+      </div>
+    </section>
   </div>
 
   <script src="app.js"></script>
 </body>
+
 </html>

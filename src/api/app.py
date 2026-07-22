@@ -11,6 +11,27 @@ from src.db.models import Event, CameraConfig, CountingLog, Snapshot
 from src.services.aggregator import EventAggregatorService
 
 
+def run_migrations():
+    """Tambahkan kolom baru ke tabel yang sudah ada agar DB lama tetap kompatibel."""
+    migrations = [
+        ("camera_configs", "last_active_at", "DATETIME"),
+    ]
+    with engine.connect() as conn:
+        for table, column, col_type in migrations:
+            try:
+                result = conn.execute(
+                    __import__("sqlalchemy").text(f"SELECT {column} FROM {table} LIMIT 1")
+                )
+                result.fetchone()
+            except Exception:
+                conn.execute(
+                    __import__("sqlalchemy").text(
+                        f"ALTER TABLE {table} ADD COLUMN {column} {col_type}"
+                    )
+                )
+                conn.commit()
+
+
 def seed_default_event():
     db = SessionLocal()
     try:
@@ -38,6 +59,7 @@ def seed_default_event():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
+    run_migrations()
     seed_default_event()
     yield
 
@@ -69,8 +91,14 @@ class ConnectionManager:
 
     async def broadcast(self, event_id: int, message: dict):
         if event_id in self.active_connections:
-            for connection in self.active_connections[event_id]:
-                await connection.send_json(message)
+            disconnected = []
+            for connection in list(self.active_connections[event_id]):
+                try:
+                    await connection.send_json(message)
+                except Exception:
+                    disconnected.append(connection)
+            for conn in disconnected:
+                self.disconnect(event_id, conn)
 
 manager = ConnectionManager()
 
@@ -114,13 +142,35 @@ async def record_count(payload: CountPayload, db: Session = Depends(get_db)):
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+class HeartbeatPayload(BaseModel):
+    event_id: int
+    camera_id: int
+
+@app.post("/api/heartbeat")
+async def record_heartbeat(payload: HeartbeatPayload, db: Session = Depends(get_db)):
+    service = EventAggregatorService(db, payload.event_id)
+    summary = service.record_heartbeat(payload.camera_id)
+    await manager.broadcast(payload.event_id, summary)
+    return {"status": "heartbeat_received", "summary": summary}
+
+@app.post("/api/events/{event_id}/reset")
+async def reset_counter(event_id: int, db: Session = Depends(get_db)):
+    event = db.query(Event).filter_by(id=event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    service = EventAggregatorService(db, event_id)
+    summary = service.reset_counter()
+    await manager.broadcast(event_id, summary)
+    return {"status": "success", "summary": summary}
+
+
 @app.websocket("/ws/events/{event_id}")
 async def websocket_endpoint(websocket: WebSocket, event_id: int):
     await manager.connect(event_id, websocket)
     try:
         while True:
             await websocket.receive_text()
-    except WebSocketDisconnect:
+    except (WebSocketDisconnect, Exception):
         manager.disconnect(event_id, websocket)
 
 app.mount("/", StaticFiles(directory="src/static", html=True), name="static")
