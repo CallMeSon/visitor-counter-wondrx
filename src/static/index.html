@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Visitor Counter Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <nav class="navbar-pill">
+      <div class="brand">
+        <span class="dot"></span> Event Counter MVP
+      </div>
+      <div class="event-badge">
+        <span id="event-name">Konser/Seminar Live</span>
+      </div>
+    </nav>
+
+    <header class="hero-section">
+      <div class="badge-status">
+        <span class="live-indicator"></span> LIVE UPDATING (7 CAMERAS)
+      </div>
+      <h1 class="headline">Jumlah Pengunjung Real-Time</h1>
+    </header>
+
+    <section class="metrics-grid">
+      <div class="card card-primary">
+        <div class="card-label">PENGUNJUNG SAAT INI</div>
+        <div class="card-value" id="val-inside">0</div>
+        <div class="card-sub">Di dalam area venue</div>
+      </div>
+      <div class="card">
+        <div class="card-label">TOTAL MASUK</div>
+        <div class="card-value accent-lime" id="val-total-in">0</div>
+        <div class="card-sub">Pintu Masuk (2 Kamera)</div>
+      </div>
+      <div class="card">
+        <div class="card-label">TOTAL KELUAR</div>
+        <div class="card-value accent-purple" id="val-total-out">0</div>
+        <div class="card-sub">Pintu Keluar (5 Kamera)</div>
+      </div>
+    </section>
+
+    <section class="chart-section">
+      <div class="card chart-card">
+        <h2>Grafik Tren Pengunjung</h2>
+        <div class="chart-container">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
