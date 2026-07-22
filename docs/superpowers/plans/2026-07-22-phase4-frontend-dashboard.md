@@ -27,7 +27,7 @@
 - Consumes: `DESIGN.md` token specifications
 - Produces: `index.html`, `styles.css`
 
-- [ ] **Step 1: Write test for Static Frontend Assets**
+- [x] **Step 1: Write test for Static Frontend Assets**
 
 Create `tests/test_frontend_assets.py`:
 ```python
@@ -46,12 +46,12 @@ def test_css_design_tokens():
     assert "--radius-pill" in content
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pytest tests/test_frontend_assets.py -v`
 Expected: FAIL with `AssertionError: assert False`
 
-- [ ] **Step 3: Write HTML and CSS files**
+- [x] **Step 3: Write HTML and CSS files**
 
 Create directory `src/static`.
 
@@ -259,7 +259,7 @@ body {
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes partially (app.js needed in next step)**
+- [x] **Step 4: Run test to verify it passes partially (app.js needed in next step)**
 
 Write minimal `src/static/app.js`:
 ```javascript
@@ -269,7 +269,7 @@ console.log("Visitor counter frontend app initialized.");
 Run: `pytest tests/test_frontend_assets.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/static/index.html src/static/styles.css src/static/app.js tests/test_frontend_assets.py
@@ -289,7 +289,7 @@ git commit -m "feat(frontend): add responsive dashboard UI with DESIGN.md tokens
 - Consumes: `/api/events/1/summary`, `/ws/events/1`
 - Produces: Live metric DOM binding & Chart updates
 
-- [ ] **Step 1: Write test for Static Mount in FastAPI**
+- [x] **Step 1: Write test for Static Mount in FastAPI**
 
 Create `tests/test_frontend_ws.py`:
 ```python
@@ -304,12 +304,12 @@ def test_static_index_route():
     assert "Event Visitor Counter Dashboard" in response.text
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pytest tests/test_frontend_ws.py -v`
 Expected: FAIL with 404 Not Found (static files not mounted yet)
 
-- [ ] **Step 3: Mount StaticFiles in FastAPI & Complete `app.js`**
+- [x] **Step 3: Mount StaticFiles in FastAPI & Complete `app.js`**
 
 Update `src/api/app.py` to add:
 ```python
@@ -405,12 +405,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pytest tests/test_frontend_ws.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/static/app.js src/api/app.py tests/test_frontend_ws.py
