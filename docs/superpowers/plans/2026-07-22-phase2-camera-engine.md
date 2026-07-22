@@ -27,7 +27,7 @@
 - Consumes: None
 - Produces: `LineCrossCounter`, `Point`, `update_position()`, `reset_track()`
 
-- [ ] **Step 1: Write the failing test for LineCrossCounter**
+- [x] **Step 1: Write the failing test for LineCrossCounter**
 
 Create `tests/test_counter_engine.py`:
 ```python
@@ -64,12 +64,12 @@ def test_reset_object_track():
     assert 1 not in counter.history
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `pytest tests/test_counter_engine.py -v`
 Expected: FAIL with `ModuleNotFoundError: No module named 'src.engine'`
 
-- [ ] **Step 3: Write minimal LineCrossCounter implementation**
+- [x] **Step 3: Write minimal LineCrossCounter implementation**
 
 Create empty file `src/engine/__init__.py`.
 
@@ -119,12 +119,12 @@ class LineCrossCounter:
         self.crossed_ids.discard(obj_id)
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `pytest tests/test_counter_engine.py -v`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/engine/__init__.py src/engine/counter.py tests/test_counter_engine.py
