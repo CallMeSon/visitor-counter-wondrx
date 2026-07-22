@@ -1,4 +1,4 @@
-# 🚶 Event Visitor Counter (AI Body Detection & Real-time Dashboard)
+# Event Visitor Counter (AI Body Detection & Real-time Dashboard)
 
 Sistem penghitung jumlah pengunjung acara (event) secara *real-time* berbasis **YOLOv8** (Computer Vision), **FastAPI** (Backend REST & WebSockets), dan **Vanilla JS/CSS** (Live Dashboard). 
 
@@ -6,25 +6,25 @@ Sistem ini didesain fleksibel untuk menghitung pengunjung melalui beberapa kamer
 
 ---
 
-## 📋 Daftar Isi
+## Daftar Isi
 
-1. [Fitur Utama](#-fitur-utama)
-2. [Prasyarat Sistem](#-prasyarat-sistem)
-3. [Instalasi & Setup](#-instalasi--setup)
-4. [Panduan Menjalankan Aplikasi](#-panduan-menjalankan-aplikasi)
+1. [Fitur Utama](#fitur-utama)
+2. [Prasyarat Sistem](#prasyarat-sistem)
+3. [Instalasi & Setup](#instalasi--setup)
+4. [Panduan Menjalankan Aplikasi](#panduan-menjalankan-aplikasi)
    - [Langkah 1: Menjalankan Backend Server & Dashboard](#langkah-1-menjalankan-backend-server--dashboard)
    - [Langkah 2: Menjalankan Kamera AI (Camera Runner)](#langkah-2-menjalankan-kamera-ai-camera-runner)
    - [Langkah 3 (Opsional): Simulasi Pengunjung](#langkah-3-opsional-simulasi-pengunjung-tanpa-kamera)
-5. [Pengaturan Multi-PC / Jaringan Terpisah](#-pengaturan-multi-pc--jaringan-terpisah)
-6. [Pengujian (Testing)](#-pengujian-testing)
-7. [Struktur Proyek](#-struktur-proyek)
+5. [Pengaturan Multi-PC / Jaringan Terpisah](#pengaturan-multi-pc--jaringan-terpisah)
+6. [Pengujian (Testing)](#pengujian-testing)
+7. [Struktur Proyek](#struktur-proyek)
 
 ---
 
-## ✨ Fitur Utama
+## Fitur Utama
 
 - **Live Counter Real-Time**: WebSocket update instan saat ada orang melewati garis hitung.
-- **Monitoring Status & Peran Kamera**: Section khusus di Dashboard untuk mengecek berapa kamera yang terhubung (`🟢 Connected` / `⚪ Standby`), peran masing-masing kamera (`MASUK` vs `KELUAR`), dan jumlah hitungan per kamera.
+- **Monitoring Status & Peran Kamera**: Section khusus di Dashboard untuk mengecek berapa kamera yang terhubung (Connected / Standby), peran masing-masing kamera (MASUK vs KELUAR), dan jumlah hitungan per kamera.
 - **Reset Hitungan Real-Time**: Tombol reset di Dashboard & API `POST /api/events/{id}/reset` untuk mengosongkan angka hitungan dan grafik tren kapan saja secara instan di seluruh perangkat tersambung.
 - **Grafik Tren Pengunjung**: Menampilkan histori masuk, keluar, dan jumlah pengunjung yang berada di dalam area event.
 - **Deteksi AI Presisi (YOLOv8)**: Tracking objek orang dengan algoritma Line Crossing Counter.
@@ -33,7 +33,7 @@ Sistem ini didesain fleksibel untuk menghitung pengunjung melalui beberapa kamer
 
 ---
 
-## 💻 Prasyarat Sistem
+## Prasyarat Sistem
 
 - **Python**: Versi 3.9 atau lebih baru.
 - **Hardware Kamera**: Webcam USB, IP Camera RTSP, atau file video.
@@ -41,7 +41,7 @@ Sistem ini didesain fleksibel untuk menghitung pengunjung melalui beberapa kamer
 
 ---
 
-## ⚙️ Instalasi & Setup
+## Instalasi & Setup
 
 1. **Clone / Buka Direktori Proyek**
    ```bash
@@ -67,7 +67,7 @@ Sistem ini didesain fleksibel untuk menghitung pengunjung melalui beberapa kamer
 
 ---
 
-## 🚀 Panduan Menjalankan Aplikasi
+## Panduan Menjalankan Aplikasi
 
 ### Langkah 1: Menjalankan Backend Server & Dashboard
 
@@ -92,7 +92,8 @@ python camera_runner.py --camera-id 1 --source 0
 ```
 
 #### B. Menjalankan dengan IP Camera (RTSP Stream) atau File Video
-> 💡 *Catatan: URL `rtsp://admin:password@192.168.1.50:554/stream` di bawah adalah **contoh placeholder**. Ganti dengan IP address, username, password, dan stream path asli dari IP Camera Anda.*
+
+> **Catatan:** URL `rtsp://admin:password@192.168.1.50:554/stream` di bawah adalah **contoh placeholder**. Ganti dengan IP address, username, password, dan stream path asli dari IP Camera Anda.
 
 ```bash
 # Menggunakan RTSP Stream (Ganti IP & kredensial sesuai kamera Anda)
@@ -120,6 +121,15 @@ python camera_runner.py --camera-id 1 --source "video_sample.mp4"
   python camera_runner.py --camera-id 1 --source 0 --no-window
   ```
 
+- **Kontrol Keyboard pada Jendela Kamera**:
+
+  | Tombol | Fungsi |
+  |--------|--------|
+  | `H` | Snap garis ke posisi Horizontal tengah |
+  | `V` | Snap garis ke posisi Vertikal tengah |
+  | `R` | Reset posisi ke tengah (mode aktif saat ini) |
+  | `Q` | Keluar dari kamera |
+
 ---
 
 ### Langkah 3 (Opsional): Simulasi Pengunjung Tanpa Kamera
@@ -137,7 +147,7 @@ python sim_test.py
 
 Untuk mengosongkan/mereset angka hitungan pengunjung dan grafik tren kembali ke 0:
 
-- **Lewat Dashboard UI**: Klik tombol **`🔄 Reset Hitungan`** di sudut kanan atas navigasi Dashboard dan konfirmasi dialog prompt.
+- **Lewat Dashboard UI**: Klik tombol **Reset Hitungan** di sudut kanan atas navigasi Dashboard dan konfirmasi dialog prompt.
 - **Lewat API (cURL / HTTP client)**:
   ```bash
   curl -X POST http://localhost:8000/api/events/1/reset
@@ -146,7 +156,7 @@ Untuk mengosongkan/mereset angka hitungan pengunjung dan grafik tren kembali ke 
 
 ---
 
-## 🌐 Pengaturan Multi-PC / Jaringan Terpisah
+## Pengaturan Multi-PC / Jaringan Terpisah
 
 Jika Anda ingin menjalankan **Backend Server** di satu PC (misalnya PC Server di IP `192.168.1.100`) dan **Kamera Runner** di PC lain:
 
@@ -161,7 +171,7 @@ Jika Anda ingin menjalankan **Backend Server** di satu PC (misalnya PC Server di
 
 ---
 
-## 🧪 Pengujian (Testing)
+## Pengujian (Testing)
 
 Untuk memastikan seluruh modul backend, database, service aggregator, dan engine berjalan normal:
 
@@ -171,7 +181,7 @@ pytest
 
 ---
 
-## 📁 Struktur Proyek
+## Struktur Proyek
 
 ```text
 visitor-counter/
