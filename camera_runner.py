@@ -15,12 +15,22 @@ def main():
     parser.add_argument("--line-coords", type=str, default=None,
                         help="Custom line coordinates in format 'x1,y1,x2,y2' (e.g. '100,200,500,200')")
     
-    parser.add_argument("--api-url", type=str, default="http://127.0.0.1:8000/api/count",
-                        help="Backend Server API URL (e.g. http://192.168.1.100:8000/api/count)")
+    parser.add_argument("--host", type=str, default=None, help="Server IP / Host (e.g. 192.168.1.150)")
+    parser.add_argument("--port", type=int, default=8000, help="Server Port (default 8000)")
+    parser.add_argument("--api-url", type=str, default=None,
+                        help="Backend Server API URL (override custom host/port if specified)")
     
     parser.add_argument("--no-window", action="store_true", help="Disable OpenCV video window GUI")
     
     args = parser.parse_args()
+
+    # Tentukan API URL berdasarkan --api-url, --host, atau default 127.0.0.1
+    if args.api_url:
+        api_url = args.api_url
+    elif args.host:
+        api_url = f"http://{args.host}:{args.port}/api/count"
+    else:
+        api_url = f"http://127.0.0.1:{args.port}/api/count"
 
     # Convert string numeric camera index (e.g. "0", "1") to integer for OpenCV webcam
     if str(args.source).isdigit():
@@ -35,7 +45,7 @@ def main():
         orientation=args.line_orientation,
         position=args.line_position,
         custom_coords=args.line_coords,
-        api_url=args.api_url,
+        api_url=api_url,
         show_window=not args.no_window
     )
 
