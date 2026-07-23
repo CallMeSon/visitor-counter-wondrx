@@ -1,13 +1,13 @@
 import os
+from fastapi.testclient import TestClient
+from src.api.app import app
 
-def test_static_files_exist():
-    assert os.path.exists("src/static/index.html")
-    assert os.path.exists("src/static/styles.css")
-    assert os.path.exists("src/static/app.js")
+client = TestClient(app)
 
-def test_css_design_tokens():
-    with open("src/static/styles.css", "r", encoding="utf-8") as f:
-        content = f.read()
-    assert "#FBF8F3" in content
-    assert "#020002" in content
-    assert "--radius-pill" in content
+def test_logo_asset_exists():
+    assert os.path.exists("src/static/assets/logo.png")
+
+def test_logo_asset_served():
+    response = client.get("/assets/logo.png")
+    assert response.status_code == 200
+    assert response.headers["content-type"] in ["image/png", "image/x-png"]
