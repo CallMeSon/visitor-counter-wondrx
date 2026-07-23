@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Event Visitor Counter Dashboard</title>
+  <title>Event Counter Wondrx Dashboard</title>
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -12,11 +12,16 @@
 <body>
   <div class="container">
     <nav class="navbar-pill">
-      <div class="brand">
-        <span class="dot"></span> Event Counter MVP
+      <div class="brand-wrapper">
+        <img src="assets/logo.png" alt="BNI wondrX Logo" class="brand-logo">
+        <div class="brand-divider"></div>
+        <span class="brand-title">Event Counter Wondrx</span>
       </div>
-      <div class="event-badge">
-        <span id="event-name">Konser/Seminar Live</span>
+      <div class="navbar-right">
+        <div class="event-badge">
+          <span id="event-name">Konser/Seminar Live</span>
+        </div>
+        <button id="btn-reset" class="btn-reset" onclick="resetCounter()">🔄 Reset Hitungan</button>
       </div>
     </nav>
 
