@@ -12,18 +12,34 @@ function initChart() {
           label: 'Pengunjung di Dalam',
           data: [],
           borderColor: '#FF7200',
-          backgroundColor: 'rgba(255, 114, 0, 0.1)',
+          backgroundColor: 'rgba(255, 114, 0, 0.08)',
           fill: true,
-          tension: 0.3,
-          borderWidth: 3
+          tension: 0.35,
+          borderWidth: 3,
+          pointBackgroundColor: '#FF7200',
+          pointRadius: 4,
+          pointHoverRadius: 6
         }
       ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            font: { family: 'Inter', weight: '600' }
+          }
+        }
+      },
       scales: {
-        y: { beginAtZero: true }
+        x: {
+          grid: { display: false }
+        },
+        y: {
+          beginAtZero: true,
+          grid: { color: '#EAE5DD' }
+        }
       }
     }
   });
@@ -44,7 +60,7 @@ async function fetchTrend() {
     const res = await fetch(`/api/events/${EVENT_ID}/trend`);
     const history = await res.json();
     if (trendChart) {
-      trendChart.data.labels = history.map(h => new Date(h.timestamp).toLocaleTimeString());
+      trendChart.data.labels = history.map(h => new Date(h.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       trendChart.data.datasets[0].data = history.map(h => h.current_inside);
       trendChart.update();
     }
@@ -120,6 +136,25 @@ function initWebSocket() {
   ws.onclose = () => {
     setTimeout(initWebSocket, 3000);
   };
+}
+
+async function resetCounter() {
+  if (!confirm("Apakah Anda yakin ingin mengosongkan/reset seluruh hitungan pengunjung?")) {
+    return;
+  }
+  try {
+    const res = await fetch(`/api/events/${EVENT_ID}/reset`, { method: 'POST' });
+    const data = await res.json();
+    if (res.ok) {
+      updateMetrics(data.summary);
+      fetchTrend();
+    } else {
+      alert("Gagal melakukan reset: " + (data.detail || "Error server"));
+    }
+  } catch (err) {
+    console.error("Failed resetting counter:", err);
+    alert("Koneksi gagal saat mencoba reset hitungan.");
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
