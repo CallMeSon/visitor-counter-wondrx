@@ -1,2 +1,16 @@
-docs/
+# Database
+*.db
+visitor_counter.db
+
+# Python & Environment
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+.pytest_cache/
+.superpowers/
+
+# Local docs / setup notes
 setup.md
+docs/
