@@ -55,7 +55,9 @@ body {
 
 .brand-logo {
   height: 32px;
+  max-height: 32px;
   width: auto;
+  max-width: 180px;
   object-fit: contain;
 }
 
