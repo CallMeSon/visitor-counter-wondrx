@@ -1,10 +1,12 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 from src.db.database import Base
 
+WIB = timezone(timedelta(hours=7))
+
 def utc_now():
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+    return datetime.now(WIB).replace(tzinfo=None)
 
 class Event(Base):
     __tablename__ = "events"
