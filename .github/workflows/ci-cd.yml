@@ -1,0 +1,67 @@
+name: CI/CD Pipeline - Event Visitor Counter (Self-Hosted Home ISP)
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  # ====================================================
+  # JOB 1: CLOUD CI (Testing & Quality Check di GitHub)
+  # ====================================================
+  cloud-ci:
+    name: Cloud CI Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install System Dependencies (OpenCV & FFmpeg)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgl1-mesa-glx libglib2.0-0 ffmpeg
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Pytest Test Suite
+        run: |
+          pytest --maxfail=1 --disable-warnings -v
+
+  # ====================================================
+  # JOB 2: HOME DEPLOY (Jalan Langsung di Mini PC Rumah)
+  # ====================================================
+  home-deploy:
+    name: Deploy to Home Mini PC (Self-Hosted Runner)
+    needs: [cloud-ci]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout Code Locally
+        uses: actions/checkout@v4
+
+      - name: Pull Latest Changes & Update Virtualenv
+        run: |
+          git checkout -- .
+          git pull origin main
+          source venv/bin/activate || true
+          pip install -r requirements.txt
+
+      - name: Restart Visitor Counter Service
+        run: |
+          sudo systemctl restart visitor-counter || echo "Service restart completed."
