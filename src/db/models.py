@@ -18,6 +18,7 @@ class Event(Base):
     cameras = relationship("CameraConfig", back_populates="event", cascade="all, delete-orphan")
     logs = relationship("CountingLog", back_populates="event", cascade="all, delete-orphan")
     snapshots = relationship("Snapshot", back_populates="event", cascade="all, delete-orphan")
+    daily_records = relationship("DailyRecord", back_populates="event", cascade="all, delete-orphan")
 
 class CameraConfig(Base):
     __tablename__ = "camera_configs"
@@ -54,4 +55,19 @@ class Snapshot(Base):
     timestamp = Column(DateTime, default=utc_now)
 
     event = relationship("Event", back_populates="snapshots")
+
+class DailyRecord(Base):
+    __tablename__ = "daily_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
+    date = Column(String, nullable=False, index=True)  # Format: "YYYY-MM-DD"
+    day_number = Column(Integer, nullable=False)       # 1, 2, 3...
+    total_in = Column(Integer, default=0)
+    total_out = Column(Integer, default=0)
+    peak_inside = Column(Integer, default=0)
+    updated_at = Column(DateTime, default=utc_now)
+
+    event = relationship("Event", back_populates="daily_records")
+
 
