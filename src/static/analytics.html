@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics & Histori Multi-Hari - Event Counter Wondrx</title>
+  <link rel="stylesheet" href="styles.css?v=2">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div class="container">
+    <nav class="navbar-pill">
+      <div class="brand-wrapper">
+        <img src="assets/logo.png" alt="BNI wondrX Logo" class="brand-logo" height="32" style="height:32px; max-height:32px; width:auto; object-fit:contain;">
+        <div class="brand-divider"></div>
+        <span class="brand-title">Event Counter Wondrx</span>
+      </div>
+      <div class="navbar-right">
+        <a href="index.html" class="btn-analytics">Kembali ke Live Counter</a>
+      </div>
+    </nav>
+
+    <header class="hero-section">
+      <div class="badge-status">
+        <span class="dot-status dot-connected"></span> ANALYTICS & HISTORI KINERJA EVENT
+      </div>
+      <h1 class="headline">Laporan Pengunjung Multi-Hari</h1>
+    </header>
+
+    <!-- Top Key Metrics Cards -->
+    <section class="metrics-grid">
+      <div class="card card-primary">
+        <div class="card-label">TOTAL PENGUNJUNG (SEMUA HARI)</div>
+        <div class="card-value" id="val-total-all-days">0</div>
+        <div class="card-sub">Akumulasi pengunjung masuk seluruh hari</div>
+      </div>
+      <div class="card">
+        <div class="card-label">JAM PALING RAMAI (AKUMULASI)</div>
+        <div class="card-value accent-lime" id="val-peak-hour" style="font-size: 38px; line-height: 1.2;">-</div>
+        <div class="card-sub">Slot 1 jam kedatangan tertinggi</div>
+      </div>
+      <div class="card">
+        <div class="card-label">HARI TERAMAI</div>
+        <div class="card-value accent-purple" id="val-busiest-day" style="font-size: 32px; line-height: 1.2;">-</div>
+        <div class="card-sub">Hari dengan pengunjung masuk terbanyak</div>
+      </div>
+    </section>
+
+    <!-- Daily Records Table Section -->
+    <section class="chart-section">
+      <div class="card">
+        <div class="section-header">
+          <h2>Ringkasan Histori Per Hari</h2>
+          <div class="camera-summary-badge">
+            Total Hari Aktif: <strong id="val-total-days">0</strong> Hari
+          </div>
+        </div>
+        <div style="overflow-x: auto; margin-top: 12px;">
+          <table class="analytics-table">
+            <thead>
+              <tr>
+                <th>HARI KE-</th>
+                <th>TANGGAL</th>
+                <th>TOTAL MASUK</th>
+                <th>TOTAL KELUAR</th>
+                <th>PUNCAK PENGUNJUNG (PEAK)</th>
+              </tr>
+            </thead>
+            <tbody id="daily-table-body">
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--color-muted); padding: 24px;">Memuat data histori...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Visual Charts Section -->
+    <section class="metrics-grid" style="grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));">
+      <div class="card chart-card">
+        <h2>Perbandingan Pengunjung Harian</h2>
+        <div class="chart-container">
+          <canvas id="dailyBarChart"></canvas>
+        </div>
+      </div>
+      <div class="card chart-card">
+        <h2>Distribusi Kedatangan Per Jam</h2>
+        <div class="chart-container">
+          <canvas id="hourlyLineChart"></canvas>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="analytics.js"></script>
+</body>
+
+</html>

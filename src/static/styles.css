@@ -352,3 +352,54 @@ body {
   color: var(--color-text);
   font-size: 1rem;
 }
+
+/* Analytics Navigation Button */
+.btn-analytics {
+  background: var(--color-bg);
+  border: 1px solid var(--color-text);
+  color: var(--color-text);
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.btn-analytics:hover {
+  background: var(--color-text);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+/* Analytics Table */
+.analytics-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.analytics-table th {
+  background: var(--color-bg);
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 14px 18px;
+  border-bottom: 2px solid var(--color-border);
+}
+
+.analytics-table td {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.analytics-table tbody tr:hover {
+  background: #FAF6F0;
+}
