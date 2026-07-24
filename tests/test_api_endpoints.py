@@ -56,3 +56,16 @@ def test_api_summary_and_count():
     assert res_reset.status_code == 200
     assert res_reset.json()["summary"]["current_inside"] == 0
 
+def test_get_event_analytics_endpoint():
+    response = client.get("/api/events/1/analytics")
+    assert response.status_code == 200
+    data = response.json()
+    assert "event_id" in data
+    assert "overall_stats" in data
+    assert "daily_breakdown" in data
+    assert "hourly_distribution" in data
+    assert "total_visitors_all_days" in data["overall_stats"]
+    assert "peak_hour_overall" in data["overall_stats"]
+    assert "busiest_day" in data["overall_stats"]
+
+

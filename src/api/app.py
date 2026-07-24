@@ -131,6 +131,14 @@ def get_trend(event_id: int, db: Session = Depends(get_db)):
     service = EventAggregatorService(db, event_id)
     return service.get_trend_history()
 
+@app.get("/api/events/{event_id}/analytics")
+def get_analytics(event_id: int, db: Session = Depends(get_db)):
+    event = db.query(Event).filter_by(id=event_id).first()
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    service = EventAggregatorService(db, event_id)
+    return service.get_analytics_summary()
+
 @app.post("/api/count")
 async def record_count(payload: CountPayload, db: Session = Depends(get_db)):
     service = EventAggregatorService(db, payload.event_id)
