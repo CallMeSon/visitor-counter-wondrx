@@ -1,8 +1,8 @@
 # Event Visitor Counter (AI Body Detection & Real-time Dashboard)
 
-Sistem penghitung jumlah pengunjung acara (event) secara *real-time* berbasis **YOLOv8** (Computer Vision), **FastAPI** (Backend REST & WebSockets), dan **Vanilla JS/CSS** (Live Dashboard). 
+Sistem penghitung jumlah pengunjung acara (event) secara *real-time* berbasis **YOLOv8** (Computer Vision), **FastAPI** (Backend REST & WebSockets), dan **Vanilla JS/CSS** (Live Dashboard & Multi-Day Analytics). 
 
-Sistem ini didesain fleksibel untuk menghitung pengunjung melalui beberapa kamera entry (masuk) dan exit (keluar), baik di LAN lokal yang sama maupun terdistribusi di beberapa PC terpisah.
+Sistem ini didesain fleksibel untuk menghitung pengunjung melalui beberapa kamera entry (masuk) dan exit (keluar), baik di LAN lokal yang sama maupun terdistribusi di beberapa PC terpisah, serta mendukung **Event Multi-Hari (3-Day Event)** dengan fitur **Auto-Reset Harian** dan **Halaman Laporan Analytics**.
 
 ---
 
@@ -14,7 +14,9 @@ Sistem ini didesain fleksibel untuk menghitung pengunjung melalui beberapa kamer
 4. [Panduan Menjalankan Aplikasi](#panduan-menjalankan-aplikasi)
    - [Langkah 1: Menjalankan Backend Server & Dashboard](#langkah-1-menjalankan-backend-server--dashboard)
    - [Langkah 2: Menjalankan Kamera AI (Camera Runner)](#langkah-2-menjalankan-kamera-ai-camera-runner)
-   - [Langkah 3 (Opsional): Simulasi Pengunjung](#langkah-3-opsional-simulasi-pengunjung-tanpa-kamera)
+   - [Langkah 3: Akses Halaman Analytics & Histori Multi-Hari](#langkah-3-akses-halaman-analytics--histori-multi-hari)
+   - [Langkah 4 (Opsional): Simulasi Pengunjung](#langkah-4-opsional-simulasi-pengunjung-tanpa-kamera)
+   - [Langkah 5: Mereset Angka Hitungan Pengunjung](#langkah-5-mereset-angka-hitungan-pengunjung)
 5. [Pengaturan Multi-PC / Jaringan Terpisah](#pengaturan-multi-pc--jaringan-terpisah)
 6. [Pengujian (Testing)](#pengujian-testing)
 7. [Struktur Proyek](#struktur-proyek)
@@ -24,12 +26,16 @@ Sistem ini didesain fleksibel untuk menghitung pengunjung melalui beberapa kamer
 ## Fitur Utama
 
 - **Live Counter Real-Time**: WebSocket update instan saat ada orang melewati garis hitung.
+- **Pencatatan Multi-Hari (Auto-Reset Harian)**: Mendukung event yang berlangsung selama beberapa hari (contoh: 3 hari). Counter harian otomatis di-reset ke `0` setiap awal hari baru, sementara data histori hari sebelumnya tetap tersimpan utuh di database.
+- **Halaman Analytics & Histori Event (`analytics.html`)**: Halaman khusus laporan performa event multi-hari yang bersih dan profesional (tanpa emoji, mengacu pedoman [`DESIGN.md`](DESIGN.md)):
+  - **Key Metrics**: Total Pengunjung Akumulasi Seluruh Hari, Jam Paling Ramai (Akumulasi), dan Hari Teramai.
+  - **Tabel Breakdown Harian**: Rincian Hari ke-, Tanggal, Total Masuk, Total Keluar, dan Puncak Pengunjung Bersamaan (*Peak Inside*).
+  - **Grafik Analisis (Chart.js)**: Bar chart perbandingan pengunjung antar-hari & Line chart distribusi jam kedatangan.
+- **Zona Waktu Presisi (WIB / GMT+7)**: Semua pencatatan log dan grafik jam keramaian mengikuti waktu lokal Indonesia WIB secara akurat.
 - **Monitoring Status & Peran Kamera**: Section khusus di Dashboard untuk mengecek berapa kamera yang terhubung (Connected / Standby), peran masing-masing kamera (MASUK vs KELUAR), dan jumlah hitungan per kamera.
 - **Reset Hitungan Real-Time**: Tombol reset di Dashboard & API `POST /api/events/{id}/reset` untuk mengosongkan angka hitungan dan grafik tren kapan saja secara instan di seluruh perangkat tersambung.
-- **Grafik Tren Pengunjung**: Menampilkan histori masuk, keluar, dan jumlah pengunjung yang berada di dalam area event.
 - **Deteksi AI Presisi (YOLOv8)**: Tracking objek orang dengan algoritma Line Crossing Counter.
 - **Dukungan Multi-Kamera**: Mendukung pemetaan peran kamera (Entry 1-2, Exit 3-7).
-- **Fleksibel**: Mendukung webcam USB, RTSP IP Camera, maupun file video demo.
 
 ---
 
@@ -71,13 +77,14 @@ Sistem ini didesain fleksibel untuk menghitung pengunjung melalui beberapa kamer
 
 ### Langkah 1: Menjalankan Backend Server & Dashboard
 
-Jalankan FastAPI server menggunakan Uvicorn. Server ini akan mengelola database SQLite, WebSocket real-time, API REST, dan menyajikan dashboard frontend.
+Jalankan FastAPI server menggunakan Uvicorn dengan flag `--reload`. Server ini akan mengelola database SQLite, WebSocket real-time, API REST, dan menyajikan dashboard frontend.
 
 ```bash
 uvicorn src.api.app:app --reload --host 0.0.0.0 --port 8000
 ```
 
 - **Live Dashboard**: Buka browser di [http://localhost:8000](http://localhost:8000)
+- **Halaman Analytics**: Buka browser di [http://localhost:8000/analytics.html](http://localhost:8000/analytics.html)
 - **API Documentation (Swagger)**: Buka [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
@@ -121,18 +128,24 @@ python camera_runner.py --camera-id 1 --source "video_sample.mp4"
   python camera_runner.py --camera-id 1 --source 0 --no-window
   ```
 
-- **Kontrol Keyboard pada Jendela Kamera**:
+---
 
-  | Tombol | Fungsi |
-  |--------|--------|
-  | `H` | Snap garis ke posisi Horizontal tengah |
-  | `V` | Snap garis ke posisi Vertikal tengah |
-  | `R` | Reset posisi ke tengah (mode aktif saat ini) |
-  | `Q` | Keluar dari kamera |
+### Langkah 3: Akses Halaman Analytics & Histori Multi-Hari
+
+Untuk melihat laporan analisis akumulasi event 3 hari:
+1. Klik tombol **"Analytics & Histori"** di sudut kanan atas navbar Dashboard utama, atau
+2. Akses URL langsung di browser: [http://localhost:8000/analytics.html](http://localhost:8000/analytics.html)
+
+Di halaman ini Anda dapat melihat:
+- Total akumulasi seluruh hari
+- Jam paling ramai kedatangan pengunjung
+- Hari dengan jumlah pengunjung tertinggi
+- Tabel breakdown per-hari (Total Masuk, Total Keluar, dan Puncak *Peak Inside*)
+- Grafik perbandingan harian & pola jam kedatangan
 
 ---
 
-### Langkah 3 (Opsional): Simulasi Pengunjung Tanpa Kamera
+### Langkah 4 (Opsional): Simulasi Pengunjung Tanpa Kamera
 
 Jika Anda ingin menguji dashboard dan WebSocket tanpa menggunakan kamera fisik:
 
@@ -143,16 +156,19 @@ python sim_test.py
 
 ---
 
-### Langkah 4: Mereset Angka Hitungan Pengunjung
+### Langkah 5: Mereset Angka Hitungan Pengunjung
 
-Untuk mengosongkan/mereset angka hitungan pengunjung dan grafik tren kembali ke 0:
+Untuk mengosongkan/mereset angka hitungan pengunjung dan data histori harian:
 
+- **Lewat Skrip Python**:
+  ```bash
+  python reset_db.py
+  ```
 - **Lewat Dashboard UI**: Klik tombol **Reset Hitungan** di sudut kanan atas navigasi Dashboard dan konfirmasi dialog prompt.
 - **Lewat API (cURL / HTTP client)**:
   ```bash
   curl -X POST http://localhost:8000/api/events/1/reset
   ```
-*Begitu di-reset, seluruh dashboard yang sedang terbuka akan langsung ter-update secara real-time via WebSocket.*
 
 ---
 
@@ -173,7 +189,7 @@ Jika Anda ingin menjalankan **Backend Server** di satu PC (misalnya PC Server di
 
 ## Pengujian (Testing)
 
-Untuk memastikan seluruh modul backend, database, service aggregator, dan engine berjalan normal:
+Untuk memastikan seluruh modul backend, database, service aggregator, endpoint API analytics, dan asset frontend berjalan normal:
 
 ```bash
 pytest
@@ -187,17 +203,18 @@ pytest
 visitor-counter/
 ├── camera_runner.py      # Skrip utama pendeteksi AI & runner kamera real-time
 ├── sim_test.py           # Skrip simulasi lalu lintas pengunjung (tanpa kamera)
+├── reset_db.py           # Skrip pengosongan/reset database counter
 ├── requirements.txt      # Daftar dependensi Python
 ├── yolov8n.pt            # Pretrained Model YOLOv8 Body Detection
 ├── visitor_counter.db    # Database SQLite (dibuat otomatis)
 ├── DESIGN.md             # Panduan UI/UX & Design System
 ├── PRODUCT.md            # Dokumentasi Spesifikasi Produk & MVP Scope
-├── docs/                 # Dokumentasi internal & rencana fase pengembangan
+├── docs/                 # Dokumentasi internal, rencana fase & spesifikasi desain
 ├── src/
-│   ├── api/              # Endpoint FastAPI (REST & WebSockets)
-│   ├── db/               # Inisialisasi Database SQLite & Model SQLAlchemy
+│   ├── api/              # Endpoint FastAPI (REST & WebSockets, /analytics)
+│   ├── db/               # Inisialisasi Database SQLite & Model SQLAlchemy (DailyRecord, WIB)
 │   ├── engine/           # Logika AI Tracking & Line Crossing Counter (YOLOv8)
-│   ├── services/         # Service Agregasi Hitungan Pengunjung & Log Event
-│   └── static/           # Asset Frontend (HTML, CSS, JS Dashboard)
-└── tests/                # Unit test (Pytest)
+│   ├── services/         # Service Agregasi Hitungan Pengunjung & Analytics Harian
+│   └── static/           # Asset Frontend (HTML, CSS, JS Dashboard & Analytics Page)
+└── tests/                # Unit test & Integration test (Pytest)
 ```
