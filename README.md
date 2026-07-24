@@ -93,7 +93,14 @@ uvicorn src.api.app:app --reload --host 0.0.0.0 --port 8000
 
 Buka terminal **baru** (dengan virtual environment aktif) untuk menjalankan skrip deteksi kamera:
 
-#### A. Menjalankan dengan Webcam Laptop / USB Default (Camera ID #1 - Entry)
+#### A. Cara Interaktif (Minta Input User Otomatis)
+Jika Anda cukup menjalankan tanpa parameter, sistem akan menampilkan prompt interaktif untuk meminta input:
+```bash
+python camera_runner.py
+```
+*Sistem akan menanyakan Camera ID, Source Kamera (0/RTSP/Video), dan IP Backend secara bertahap.*
+
+#### B. Cara CLI Arguments (Direct Mode)
 ```bash
 python camera_runner.py --camera-id 1 --source 0
 ```

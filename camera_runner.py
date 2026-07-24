@@ -24,6 +24,25 @@ def main():
     
     args = parser.parse_args()
 
+    # If executed without command line arguments, offer interactive input prompts
+    import sys
+    if len(sys.argv) == 1:
+        print("\n=======================================================")
+        print("   Event Visitor Counter - Interactive Camera Setup    ")
+        print("=======================================================\n")
+        
+        cam_id_in = input("1. Masukkan Camera ID (1-2 = Entry, 3-7 = Exit) [Default 1]: ").strip()
+        if cam_id_in.isdigit():
+            args.camera_id = int(cam_id_in)
+
+        src_in = input("2. Masukkan Source Kamera (0 untuk Webcam, file video, atau URL RTSP) [Default 0]: ").strip()
+        if src_in:
+            args.source = src_in
+
+        host_in = input("3. Masukkan IP Host Backend (contoh: 192.168.1.100, press Enter jika localhost): ").strip()
+        if host_in:
+            args.host = host_in
+
     # Tentukan API URL berdasarkan --api-url, --host, atau default 127.0.0.1
     if args.api_url:
         api_url = args.api_url
@@ -37,6 +56,8 @@ def main():
         source = int(args.source)
     else:
         source = args.source
+
+    print(f"\n[INFO] Menjalankan Kamera #{args.camera_id} dengan Source '{source}' -> API: {api_url}\n")
 
     processor = CameraStreamProcessor(
         camera_id=args.camera_id,
