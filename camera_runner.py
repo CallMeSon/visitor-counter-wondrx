@@ -49,17 +49,41 @@ def main():
         if host_in:
             args.host = host_in
 
-        model_in = input("4. Masukkan Nama Model (contoh: yolov8s.onnx, yolov8n.pt) [Default yolov8s.onnx]: ").strip()
-        if model_in:
-            args.model_name = model_in
+        print("4. Pilih Format Engine Model:")
+        print("   [1] OpenVINO (Disarankan untuk Laptop Intel / Intel Iris Xe GPU - Paling Cepat & Dingin) [Default]")
+        print("   [2] ONNX (Disarankan untuk Mini PC AMD Ryzen / Radeon iGPU / CPU Universal)")
+        print("   [3] PyTorch .pt (Disarankan untuk NVIDIA GPU CUDA / Standar)")
+        model_choice = input("   Pilih [1-3, Default 1]: ").strip()
+        if model_choice == "2":
+            args.model_name = "yolov8s.onnx"
+        elif model_choice == "3":
+            args.model_name = "yolov8s.pt"
+        elif model_choice == "1" or not model_choice:
+            import os
+            if os.path.exists("yolov8s_openvino_model"):
+                args.model_name = "yolov8s_openvino_model"
+            else:
+                args.model_name = "yolov8s.onnx"
+        else:
+            args.model_name = model_choice
 
-        tracker_in = input("5. Masukkan Tracker (bytetrack.yaml atau botsort.yaml) [Default bytetrack.yaml]: ").strip()
-        if tracker_in:
-            args.tracker = tracker_in
+        print("\n5. Pilih Algoritma Pelacak (Tracker):")
+        print("   [1] ByteTrack (Sangat Cepat & Ringan - Cocok untuk FPS Tinggi & Real-time) [Default]")
+        print("   [2] BoT-SORT (Akurasi Ekstra - Memperhitungkan Pergerakan Kamera)")
+        tracker_choice = input("   Pilih [1-2, Default 1]: ").strip()
+        if tracker_choice == "2":
+            args.tracker = "botsort.yaml"
+        else:
+            args.tracker = "bytetrack.yaml"
 
-        device_in = input("6. Pilih Device Pemrosesan (cpu atau gpu) [Default cpu]: ").strip().lower()
-        if device_in:
-            args.device = device_in
+        print("\n6. Pilih Hardware Device Pemrosesan:")
+        print("   [1] GPU (Akselerasi GPU Iris Xe / Dedicated GPU)")
+        print("   [2] CPU (Pemrosesan Utama Prosesor) [Default]")
+        device_choice = input("   Pilih [1-2, Default 2]: ").strip()
+        if device_choice == "1":
+            args.device = "gpu"
+        else:
+            args.device = "cpu"
 
     # Tentukan API URL berdasarkan --api-url, --host, atau default 127.0.0.1
     if args.api_url:
