@@ -21,6 +21,10 @@ def main():
                         help="Backend Server API URL (override custom host/port if specified)")
     
     parser.add_argument("--no-window", action="store_true", help="Disable OpenCV video window GUI")
+    parser.add_argument("--model-name", type=str, default="yolov8s.onnx",
+                        help="Model name or path (e.g. yolov8s.onnx, yolov8n.pt)")
+    parser.add_argument("--tracker", type=str, default="bytetrack.yaml",
+                        help="Tracker config name (bytetrack.yaml or botsort.yaml)")
     
     args = parser.parse_args()
 
@@ -42,6 +46,14 @@ def main():
         host_in = input("3. Masukkan IP Host Backend (contoh: 192.168.1.100, press Enter jika localhost): ").strip()
         if host_in:
             args.host = host_in
+
+        model_in = input("4. Masukkan Nama Model (contoh: yolov8s.onnx, yolov8n.pt) [Default yolov8s.onnx]: ").strip()
+        if model_in:
+            args.model_name = model_in
+
+        tracker_in = input("5. Masukkan Tracker (bytetrack.yaml atau botsort.yaml) [Default bytetrack.yaml]: ").strip()
+        if tracker_in:
+            args.tracker = tracker_in
 
     # Tentukan API URL berdasarkan --api-url, --host, atau default 127.0.0.1
     if args.api_url:
@@ -67,6 +79,8 @@ def main():
         position=args.line_position,
         custom_coords=args.line_coords,
         api_url=api_url,
+        model_name=args.model_name,
+        tracker=args.tracker,
         show_window=not args.no_window
     )
 
