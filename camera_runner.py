@@ -25,6 +25,8 @@ def main():
                         help="Model name or path (e.g. yolov8s.onnx, yolov8n.pt)")
     parser.add_argument("--tracker", type=str, default="bytetrack.yaml",
                         help="Tracker config name (bytetrack.yaml or botsort.yaml)")
+    parser.add_argument("--device", type=str, default="cpu",
+                        help="Device to run inference (cpu, gpu, or GPU index e.g. 0)")
     
     args = parser.parse_args()
 
@@ -55,6 +57,10 @@ def main():
         if tracker_in:
             args.tracker = tracker_in
 
+        device_in = input("6. Pilih Device Pemrosesan (cpu atau gpu) [Default cpu]: ").strip().lower()
+        if device_in:
+            args.device = device_in
+
     # Tentukan API URL berdasarkan --api-url, --host, atau default 127.0.0.1
     if args.api_url:
         api_url = args.api_url
@@ -81,6 +87,7 @@ def main():
         api_url=api_url,
         model_name=args.model_name,
         tracker=args.tracker,
+        device=args.device,
         show_window=not args.no_window
     )
 
