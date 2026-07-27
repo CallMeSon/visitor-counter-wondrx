@@ -40,7 +40,8 @@ class CameraStreamProcessor:
         position: float = 0.5,
         custom_coords: str = None,
         api_url="http://127.0.0.1:8000/api/count",
-        model_name="yolov8n.pt",
+        model_name="yolov8s.onnx",
+        tracker="bytetrack.yaml",
         show_window=True
     ):
         self.camera_id = camera_id
@@ -51,6 +52,8 @@ class CameraStreamProcessor:
         self.custom_coords = custom_coords
         self.api_url = api_url
         self.show_window = show_window
+        self.model_name = model_name
+        self.tracker = tracker
 
         self.model = YOLO(model_name)
         self.line_p1 = (0, 240)
@@ -181,7 +184,7 @@ class CameraStreamProcessor:
                 break
 
             # Run YOLOv8 Tracking specifically for 'person' (class 0)
-            results = self.model.track(frame, persist=True, classes=[0], verbose=False)
+            results = self.model.track(frame, persist=True, classes=[0], tracker=self.tracker, verbose=False)
 
             if results and results[0].boxes and results[0].boxes.id is not None:
                 boxes = results[0].boxes.xyxy.cpu().numpy()
