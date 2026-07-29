@@ -48,7 +48,7 @@ def main():
         if src_in:
             args.source = src_in
 
-        host_in = input("3. Masukkan IP Host Backend (contoh: 192.168.1.100, press Enter jika localhost): ").strip()
+        host_in = input("3. Masukkan IP Host / Domain Backend (contoh: 192.168.1.100 atau api.eventku.com, press Enter jika localhost): ").strip()
         if host_in:
             args.host = host_in
 
@@ -95,7 +95,14 @@ def main():
     if args.api_url:
         api_url = args.api_url
     elif args.host:
-        api_url = f"http://{args.host}:{args.port}/api/count"
+        host_str = args.host.strip()
+        if host_str.startswith(("http://", "https://")):
+            if "/api/count" in host_str:
+                api_url = host_str
+            else:
+                api_url = f"{host_str.rstrip('/')}/api/count"
+        else:
+            api_url = f"http://{host_str}:{args.port}/api/count"
     else:
         api_url = f"http://127.0.0.1:{args.port}/api/count"
 
