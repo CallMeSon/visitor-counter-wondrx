@@ -1,7 +1,40 @@
 import os
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
+
 from src.api.app import app
+from src.db.database import Base, get_db
+from src.db.models import Event, CameraConfig
+
+engine = create_engine(
+    "sqlite://",
+    connect_args={"check_same_thread": False},
+    poolclass=StaticPool
+)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def override_get_db():
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+app.dependency_overrides[get_db] = override_get_db
+
+@pytest.fixture(autouse=True)
+def setup_db():
+    Base.metadata.create_all(bind=engine)
+    db = TestingSessionLocal()
+    db.add(Event(id=1, name="Test Event", max_capacity=1000))
+    db.add(CameraConfig(id=1, event_id=1, name="Pintu 1", role="entry"))
+    db.commit()
+    db.close()
+    yield
+    Base.metadata.drop_all(bind=engine)
 
 client = TestClient(app)
 
