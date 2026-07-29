@@ -1,6 +1,7 @@
+import os
 from contextlib import asynccontextmanager
-from typing import List, Dict
-from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Response
+from typing import List, Dict, Optional
+from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Response, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -9,6 +10,14 @@ from sqlalchemy.orm import Session
 from src.db.database import get_db, SessionLocal, engine, Base
 from src.db.models import Event, CameraConfig, CountingLog, Snapshot
 from src.services.aggregator import EventAggregatorService
+
+
+async def verify_api_key(x_api_key: Optional[str] = Header(None, alias="X-API-Key")):
+    expected_key = os.environ.get("API_KEY")
+    if expected_key:
+        if not x_api_key or x_api_key != expected_key:
+            raise HTTPException(status_code=401, detail="Invalid or missing API Key")
+
 
 
 def run_migrations():
@@ -140,7 +149,7 @@ def get_analytics(event_id: int, db: Session = Depends(get_db)):
     return service.get_analytics_summary()
 
 @app.post("/api/count")
-async def record_count(payload: CountPayload, db: Session = Depends(get_db)):
+async def record_count(payload: CountPayload, db: Session = Depends(get_db), _auth: None = Depends(verify_api_key)):
     service = EventAggregatorService(db, payload.event_id)
     try:
         service.record_crossing(payload.camera_id, payload.count)
@@ -162,7 +171,7 @@ async def record_heartbeat(payload: HeartbeatPayload, db: Session = Depends(get_
     return {"status": "heartbeat_received", "summary": summary}
 
 @app.post("/api/events/{event_id}/reset")
-async def reset_counter(event_id: int, db: Session = Depends(get_db)):
+async def reset_counter(event_id: int, db: Session = Depends(get_db), _auth: None = Depends(verify_api_key)):
     event = db.query(Event).filter_by(id=event_id).first()
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
