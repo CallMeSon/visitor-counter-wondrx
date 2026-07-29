@@ -1,5 +1,7 @@
 import os
 import time
+import queue
+import threading
 import cv2
 import requests
 from ultralytics import YOLO
@@ -63,6 +65,12 @@ class CameraStreamProcessor:
         self.max_queue_size = 1000
         self.api_status = "ok"  # "ok", "offline", or "unauthorized"
 
+        # Threading queue for non-blocking telemetry I/O
+        self._telemetry_queue = queue.Queue()
+        self._stop_worker_flag = False
+        self._worker_thread = threading.Thread(target=self._telemetry_worker, daemon=True)
+        self._worker_thread.start()
+
         self.model = YOLO(model_name)
         self.line_p1 = (0, 240)
         self.line_p2 = (640, 240)
@@ -93,65 +101,90 @@ class CameraStreamProcessor:
             self.dragging_point = None
 
     def send_count_to_api(self, count: int = 1):
-        headers = {}
-        if self.api_key:
-            headers["X-API-Key"] = self.api_key
-
-        # Flush pending retry queue if possible
-        to_remove = []
-        for item in list(self.failed_queue):
-            try:
-                res = requests.post(self.api_url, json=item, headers=headers, timeout=2.0)
-                if res.status_code == 200:
-                    to_remove.append(item)
-                elif res.status_code == 401:
-                    self.api_status = "unauthorized"
-                    break
-            except requests.exceptions.RequestException:
-                break
-        for item in to_remove:
-            self.failed_queue.remove(item)
-
         payload = {
             "event_id": self.event_id,
             "camera_id": self.camera_id,
             "count": count
         }
-
-        try:
-            res = requests.post(self.api_url, json=payload, headers=headers, timeout=2.0)
-            if res.status_code == 200:
-                self.api_status = "ok"
-                summary = res.json().get("summary", {})
-                print(f"✅ [Kamera #{self.camera_id}] Count Pushed! "
-                      f"Current Inside: {summary.get('current_inside', 0)}")
-            elif res.status_code == 401:
-                self.api_status = "unauthorized"
-                print(f"❌ [Kamera #{self.camera_id}] API Key Rejected (401 Unauthorized)!")
-            else:
-                self.api_status = "offline"
-                if len(self.failed_queue) < self.max_queue_size:
-                    self.failed_queue.append(payload)
-                print(f"❌ API Error: {res.status_code} - {res.text}")
-        except requests.exceptions.RequestException as e:
-            self.api_status = "offline"
-            if len(self.failed_queue) < self.max_queue_size:
-                self.failed_queue.append(payload)
-            print(f"⚠️ Failed sending count to API: {e}. Saved to retry queue (Queued: {len(self.failed_queue)})")
+        self._telemetry_queue.put({"type": "count", "payload": payload})
 
     def send_heartbeat_to_api(self):
-        heartbeat_url = self.api_url.replace("/api/count", "/api/heartbeat")
-        headers = {}
-        if self.api_key:
-            headers["X-API-Key"] = self.api_key
         payload = {
             "event_id": self.event_id,
             "camera_id": self.camera_id
         }
-        try:
-            requests.post(heartbeat_url, json=payload, headers=headers, timeout=2.0)
-        except Exception:
-            pass
+        self._telemetry_queue.put({"type": "heartbeat", "payload": payload})
+
+    def stop_worker(self):
+        self._stop_worker_flag = True
+        self._telemetry_queue.put(None)
+
+    def _telemetry_worker(self):
+        while not self._stop_worker_flag:
+            try:
+                task = self._telemetry_queue.get(timeout=0.5)
+            except queue.Empty:
+                continue
+
+            if task is None:
+                break
+
+            task_type = task.get("type")
+            payload = task.get("payload")
+            headers = {}
+            if self.api_key:
+                headers["X-API-Key"] = self.api_key
+
+            if task_type == "count":
+                # Flush pending retry queue first if possible
+                to_remove = []
+                for item in list(self.failed_queue):
+                    try:
+                        res = requests.post(self.api_url, json=item, headers=headers, timeout=2.0)
+                        if res.status_code == 200:
+                            to_remove.append(item)
+                        elif res.status_code == 401:
+                            self.api_status = "unauthorized"
+                            break
+                    except requests.exceptions.RequestException:
+                        break
+                for item in to_remove:
+                    self.failed_queue.remove(item)
+
+                try:
+                    res = requests.post(self.api_url, json=payload, headers=headers, timeout=2.0)
+                    if res.status_code == 200:
+                        self.api_status = "ok"
+                        summary = res.json().get("summary", {})
+                        print(f"✅ [Kamera #{self.camera_id}] Count Pushed! "
+                              f"Current Inside: {summary.get('current_inside', 0)}")
+                    elif res.status_code == 401:
+                        self.api_status = "unauthorized"
+                        print(f"❌ [Kamera #{self.camera_id}] API Key Rejected (401 Unauthorized)!")
+                    else:
+                        self.api_status = "offline"
+                        if len(self.failed_queue) < self.max_queue_size:
+                            self.failed_queue.append(payload)
+                        print(f"❌ API Error: {res.status_code} - {res.text}")
+                except requests.exceptions.RequestException as e:
+                    self.api_status = "offline"
+                    if len(self.failed_queue) < self.max_queue_size:
+                        self.failed_queue.append(payload)
+                    print(f"⚠️ Failed sending count to API: {e}. Saved to retry queue (Queued: {len(self.failed_queue)})")
+
+            elif task_type == "heartbeat":
+                heartbeat_url = self.api_url.replace("/api/count", "/api/heartbeat")
+                try:
+                    res = requests.post(heartbeat_url, json=payload, headers=headers, timeout=2.0)
+                    if res.status_code == 200:
+                        if self.api_status == "offline":
+                            self.api_status = "ok"
+                    elif res.status_code == 401:
+                        self.api_status = "unauthorized"
+                except requests.exceptions.RequestException:
+                    self.api_status = "offline"
+
+            self._telemetry_queue.task_done()
 
     def run(self):
         print(f"🎥 Starting Camera Processor #{self.camera_id} (Source: {self.source})...")
@@ -338,6 +371,7 @@ class CameraStreamProcessor:
                     print(f"[R] Line direset ke tengah ({current_orientation}): {self.line_p1} -> {self.line_p2}")
 
         cap.release()
+        self.stop_worker()
         if self.show_window:
             cv2.destroyAllWindows()
 
