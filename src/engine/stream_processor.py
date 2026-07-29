@@ -40,6 +40,7 @@ class CameraStreamProcessor:
         position: float = 0.5,
         custom_coords: str = None,
         api_url="http://127.0.0.1:8000/api/count",
+        api_key: str = None,
         model_name="yolov8s.onnx",
         tracker="bytetrack.yaml",
         device="cpu",
@@ -52,10 +53,15 @@ class CameraStreamProcessor:
         self.position = position
         self.custom_coords = custom_coords
         self.api_url = api_url
+        self.api_key = api_key
         self.show_window = show_window
         self.model_name = model_name
         self.tracker = tracker
         self.device = device
+
+        self.failed_queue = []
+        self.max_queue_size = 1000
+        self.api_status = "ok"  # "ok", "offline", or "unauthorized"
 
         self.model = YOLO(model_name)
         self.line_p1 = (0, 240)
@@ -87,30 +93,63 @@ class CameraStreamProcessor:
             self.dragging_point = None
 
     def send_count_to_api(self, count: int = 1):
+        headers = {}
+        if self.api_key:
+            headers["X-API-Key"] = self.api_key
+
+        # Flush pending retry queue if possible
+        to_remove = []
+        for item in list(self.failed_queue):
+            try:
+                res = requests.post(self.api_url, json=item, headers=headers, timeout=2.0)
+                if res.status_code == 200:
+                    to_remove.append(item)
+                elif res.status_code == 401:
+                    self.api_status = "unauthorized"
+                    break
+            except requests.exceptions.RequestException:
+                break
+        for item in to_remove:
+            self.failed_queue.remove(item)
+
         payload = {
             "event_id": self.event_id,
             "camera_id": self.camera_id,
             "count": count
         }
+
         try:
-            res = requests.post(self.api_url, json=payload, timeout=2.0)
+            res = requests.post(self.api_url, json=payload, headers=headers, timeout=2.0)
             if res.status_code == 200:
+                self.api_status = "ok"
                 summary = res.json().get("summary", {})
                 print(f"✅ [Kamera #{self.camera_id}] Count Pushed! "
                       f"Current Inside: {summary.get('current_inside', 0)}")
+            elif res.status_code == 401:
+                self.api_status = "unauthorized"
+                print(f"❌ [Kamera #{self.camera_id}] API Key Rejected (401 Unauthorized)!")
             else:
+                self.api_status = "offline"
+                if len(self.failed_queue) < self.max_queue_size:
+                    self.failed_queue.append(payload)
                 print(f"❌ API Error: {res.status_code} - {res.text}")
-        except Exception as e:
-            print(f"⚠️ Failed sending count to API: {e}")
+        except requests.exceptions.RequestException as e:
+            self.api_status = "offline"
+            if len(self.failed_queue) < self.max_queue_size:
+                self.failed_queue.append(payload)
+            print(f"⚠️ Failed sending count to API: {e}. Saved to retry queue (Queued: {len(self.failed_queue)})")
 
     def send_heartbeat_to_api(self):
         heartbeat_url = self.api_url.replace("/api/count", "/api/heartbeat")
+        headers = {}
+        if self.api_key:
+            headers["X-API-Key"] = self.api_key
         payload = {
             "event_id": self.event_id,
             "camera_id": self.camera_id
         }
         try:
-            requests.post(heartbeat_url, json=payload, timeout=2.0)
+            requests.post(heartbeat_url, json=payload, headers=headers, timeout=2.0)
         except Exception:
             pass
 
@@ -232,6 +271,22 @@ class CameraStreamProcessor:
                 (0, 255, 255),
                 2
             )
+
+            # Render API Connection Badge (top right)
+            if self.api_status == "ok":
+                status_text = "API: OK"
+                status_color = (0, 255, 0)
+            elif self.api_status == "unauthorized":
+                status_text = "API: 401 Unauthorized"
+                status_color = (0, 0, 255)
+            else:
+                status_text = f"API: Offline (Queued: {len(self.failed_queue)})"
+                status_color = (0, 215, 255)
+
+            cv2.putText(frame, status_text, (frame_width - 260, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 0, 0), 3)
+            cv2.putText(frame, status_text, (frame_width - 260, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.55, status_color, 2)
 
             # Keyboard shortcut hint overlay (bottom-left)
             hint_lines = [
