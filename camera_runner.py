@@ -1,3 +1,4 @@
+import os
 import argparse
 from src.engine.stream_processor import CameraStreamProcessor
 
@@ -19,6 +20,8 @@ def main():
     parser.add_argument("--port", type=int, default=8000, help="Server Port (default 8000)")
     parser.add_argument("--api-url", type=str, default=None,
                         help="Backend Server API URL (override custom host/port if specified)")
+    parser.add_argument("--api-key", type=str, default=os.environ.get("API_KEY"),
+                        help="API Key for Cloud Server authentication (optional for local dev)")
     
     parser.add_argument("--no-window", action="store_true", help="Disable OpenCV video window GUI")
     parser.add_argument("--model-name", type=str, default="yolov8s.onnx",
@@ -59,7 +62,6 @@ def main():
         elif model_choice == "3":
             args.model_name = "yolov8s.pt"
         elif model_choice == "1" or not model_choice:
-            import os
             if os.path.exists("yolov8s_openvino_model"):
                 args.model_name = "yolov8s_openvino_model"
             else:
@@ -85,6 +87,10 @@ def main():
         else:
             args.device = "cpu"
 
+        api_key_in = input("\n7. Masukkan API Key Server (Opsional, press Enter jika dev lokal): ").strip()
+        if api_key_in:
+            args.api_key = api_key_in
+
     # Tentukan API URL berdasarkan --api-url, --host, atau default 127.0.0.1
     if args.api_url:
         api_url = args.api_url
@@ -109,6 +115,7 @@ def main():
         position=args.line_position,
         custom_coords=args.line_coords,
         api_url=api_url,
+        api_key=args.api_key,
         model_name=args.model_name,
         tracker=args.tracker,
         device=args.device,
