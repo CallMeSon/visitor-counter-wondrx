@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  visitor-counter:
+    build: .
+    container_name: visitor_counter_server
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - API_KEY=${API_KEY:-my-secret-event-key}
+      - DATABASE_URL=sqlite:///./data/visitor_counter.db
+    volumes:
+      - ./data:/app/data
