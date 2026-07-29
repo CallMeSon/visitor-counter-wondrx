@@ -179,18 +179,40 @@ Untuk mengosongkan/mereset angka hitungan pengunjung dan data histori harian:
 
 ---
 
-## Pengaturan Multi-PC / Jaringan Terpisah
+## Pengaturan Multi-PC & Deployment Cloud VPS
 
-Jika Anda ingin menjalankan **Backend Server** di satu PC (misalnya PC Server di IP `192.168.1.100`) dan **Kamera Runner** di PC lain:
+Jika Anda men-deploy **Backend Server** di Cloud VPS (misal AWS/DigitalOcean) atau PC Server di jaringan lokal (`192.168.1.100`):
 
-1. **Di PC Server**: Jalankan FastAPI Uvicorn dengan host `0.0.0.0`:
-   ```bash
-   uvicorn src.api.app:app --host 0.0.0.0 --port 8000
-   ```
-2. **Di PC Kamera Node**: Jalankan `camera_runner.py` dengan mengarahkan parameter `--api-url`:
-   ```bash
-   python camera_runner.py --camera-id 1 --source 0 --api-url "http://192.168.1.100:8000/api/count"
-   ```
+### 1. Cara Generate & Pasang API Key di Server (Cloud VPS / PC Server)
+
+API Key bersifat rahasia dan di-generate oleh Anda/Admin. Anda bisa membuat string acak bebas atau menggunakan command Python satu baris berikut untuk generate key acak:
+
+```bash
+# Generate 32-character random hex API key:
+python -c "import secrets; print(secrets.token_hex(16))"
+# Contoh hasil: e4b2f8a91c3d7e5f0a8b9c1d2e3f4a5b
+```
+
+Jalankan Server dengan memasang *environment variable* `API_KEY`:
+- **Linux / VPS**:
+  ```bash
+  export API_KEY="e4b2f8a91c3d7e5f0a8b9c1d2e3f4a5b"
+  uvicorn src.api.app:app --host 0.0.0.0 --port 8000
+  ```
+- **Windows PowerShell**:
+  ```powershell
+  $env:API_KEY="e4b2f8a91c3d7e5f0a8b9c1d2e3f4a5b"
+  uvicorn src.api.app:app --host 0.0.0.0 --port 8000
+  ```
+- **Catatan Dev Lokal**: Jika `API_KEY` tidak di-set di server, sistem berjalan dalam mode dev (bebas auth).
+
+### 2. Jalankan Camera Runner di PC Kamera Node
+
+Jalankan `camera_runner.py` di laptop/device lokasi event dengan menyertakan parameter `--api-key` (atau diisi pada menu interaktif prompt #7):
+
+```bash
+python camera_runner.py --camera-id 1 --source 0 --api-url "https://api.eventku.com/api/count" --api-key "e4b2f8a91c3d7e5f0a8b9c1d2e3f4a5b"
+```
 
 ---
 
