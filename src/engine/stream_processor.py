@@ -7,6 +7,13 @@ import requests
 from ultralytics import YOLO
 from src.engine.counter import LineCrossCounter
 
+def safe_print(msg: str):
+    try:
+        print(msg)
+    except UnicodeEncodeError:
+        safe_msg = msg.encode('ascii', errors='replace').decode('ascii')
+        print(safe_msg)
+
 def calculate_line_points(
     width: int,
     height: int,
@@ -156,21 +163,21 @@ class CameraStreamProcessor:
                     if res.status_code == 200:
                         self.api_status = "ok"
                         summary = res.json().get("summary", {})
-                        print(f"✅ [Kamera #{self.camera_id}] Count Pushed! "
-                              f"Current Inside: {summary.get('current_inside', 0)}")
+                        safe_print(f"✅ [Kamera #{self.camera_id}] Count Pushed! "
+                                   f"Current Inside: {summary.get('current_inside', 0)}")
                     elif res.status_code == 401:
                         self.api_status = "unauthorized"
-                        print(f"❌ [Kamera #{self.camera_id}] API Key Rejected (401 Unauthorized)!")
+                        safe_print(f"❌ [Kamera #{self.camera_id}] API Key Rejected (401 Unauthorized)!")
                     else:
                         self.api_status = "offline"
                         if len(self.failed_queue) < self.max_queue_size:
                             self.failed_queue.append(payload)
-                        print(f"❌ API Error: {res.status_code} - {res.text}")
+                        safe_print(f"❌ API Error: {res.status_code} - {res.text}")
                 except requests.exceptions.RequestException as e:
                     self.api_status = "offline"
                     if len(self.failed_queue) < self.max_queue_size:
                         self.failed_queue.append(payload)
-                    print(f"⚠️ Failed sending count to API: {e}. Saved to retry queue (Queued: {len(self.failed_queue)})")
+                    safe_print(f"⚠️ Failed sending count to API: {e}. Saved to retry queue (Queued: {len(self.failed_queue)})")
 
             elif task_type == "heartbeat":
                 heartbeat_url = self.api_url.replace("/api/count", "/api/heartbeat")

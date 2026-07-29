@@ -12,6 +12,7 @@ def test_stream_processor_retry_queue_enqueue(monkeypatch):
     monkeypatch.setattr(requests, "post", mock_post_fail)
     
     processor.send_count_to_api(count=1)
+    processor._telemetry_queue.join()
     assert len(processor.failed_queue) == 1
     assert processor.failed_queue[0]["count"] == 1
     assert processor.api_status == "offline"
@@ -32,6 +33,7 @@ def test_stream_processor_retry_queue_flush(monkeypatch):
     monkeypatch.setattr(requests, "post", mock_post_success)
     
     processor.send_count_to_api(count=1)
+    processor._telemetry_queue.join()
     assert len(calls) == 2
     assert len(processor.failed_queue) == 0
     assert processor.api_status == "ok"
