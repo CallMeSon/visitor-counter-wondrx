@@ -402,4 +402,99 @@ body {
 
 .analytics-table tbody tr:hover {
   background: #FAF6F0;
-}
+}
+
+/* Ambient Decorative Gradient Blobs from DESIGN.md */
+body {
+  position: relative;
+  overflow-x: hidden;
+}
+
+.blob-orange {
+  position: absolute;
+  top: -120px;
+  left: -120px;
+  width: 450px;
+  height: 450px;
+  background: radial-gradient(circle, rgba(245, 145, 33, 0.14) 0%, rgba(251, 248, 243, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.blob-purple {
+  position: absolute;
+  top: 300px;
+  right: -150px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(1, 113, 135, 0.12) 0%, rgba(251, 248, 243, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Lucide Vector Icon Utility Styles */
+.icon {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.2px;
+  stroke: currentColor;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.icon-lg {
+  width: 24px;
+  height: 24px;
+  stroke-width: 2.2px;
+}
+
+.icon-sm {
+  width: 15px;
+  height: 15px;
+  stroke-width: 2.2px;
+}
+
+.icon-box {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+}
+
+.icon-box-orange {
+  background: rgba(255, 114, 0, 0.1);
+  color: #FF7200;
+  border: 1px solid rgba(255, 114, 0, 0.15);
+}
+
+.icon-box-purple {
+  background: rgba(1, 113, 135, 0.1);
+  color: #017187;
+  border: 1px solid rgba(1, 113, 135, 0.15);
+}
+
+.icon-box-green {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+  border: 1px solid rgba(5, 150, 105, 0.15);
+}
+
+.card:hover .icon-box {
+  transform: scale(1.05);
+}
+
+

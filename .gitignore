@@ -8,7 +8,9 @@ __pycache__/
 *$py.class
 venv/
 .venv/
+.env
 .pytest_cache/
+
 .superpowers/
 
 # Local docs / setup notes

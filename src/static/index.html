@@ -10,20 +10,24 @@
 </head>
 
 <body>
+  <!-- Ambient Decorative Blobs from DESIGN.md -->
+  <div class="blob-orange"></div>
+  <div class="blob-purple"></div>
+
   <div class="container">
+
     <nav class="navbar-pill">
       <div class="brand-wrapper">
-        <img src="assets/logo.png" alt="BNI wondrX Logo" class="brand-logo" height="32" style="height:32px; max-height:32px; width:auto; object-fit:contain;">
+        <img src="assets/logo.png" alt="BNI wondrX Logo" class="brand-logo" height="32"
+          style="height:32px; max-height:32px; width:auto; object-fit:contain;">
         <div class="brand-divider"></div>
         <span class="brand-title">Event Counter Wondrx</span>
       </div>
       <div class="navbar-right">
-        <div class="event-badge">
-          <span id="event-name">Konser/Seminar Live</span>
-        </div>
         <a href="analytics.html" class="btn-analytics">Analytics & Histori</a>
         <button id="btn-reset" class="btn-reset" onclick="resetCounter()">Reset Hitungan</button>
       </div>
+
     </nav>
 
     <header class="hero-section">
@@ -51,6 +55,8 @@
       </div>
     </section>
 
+
+
     <section class="chart-section">
       <div class="card chart-card">
         <h2>Grafik Tren Pengunjung</h2>
@@ -75,7 +81,9 @@
     </section>
   </div>
 
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="auth.js"></script>
   <script src="app.js"></script>
 </body>
 
-</html>
+</html>

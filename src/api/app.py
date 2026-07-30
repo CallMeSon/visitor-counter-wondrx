@@ -1,5 +1,9 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
 from contextlib import asynccontextmanager
+
 from typing import List, Dict, Optional
 from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Response, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -82,6 +86,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from src.api.auth import router as auth_router
+app.include_router(auth_router)
+
 
 class ConnectionManager:
     def __init__(self):
