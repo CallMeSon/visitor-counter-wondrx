@@ -15,7 +15,10 @@ RUN pip install --no-cache-dir \
     "uvicorn[standard]" \
     sqlalchemy \
     pydantic \
-    requests
+    requests \
+    python-dotenv \
+    itsdangerous \
+    google-auth
 
 # Copy project files
 COPY src/ /app/src/
