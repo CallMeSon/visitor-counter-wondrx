@@ -30,7 +30,10 @@ async function checkAuth() {
   }
 }
 
+let isGoogleInitialized = false;
+
 async function initGoogleSignIn() {
+  if (isGoogleInitialized) return;
   try {
     const res = await fetch('/api/auth/config');
     if (!res.ok) return;
@@ -48,14 +51,20 @@ async function initGoogleSignIn() {
     }
 
     if (window.google && google.accounts && google.accounts.id) {
-      google.accounts.id.initialize({
-        client_id: clientId,
-        callback: handleCredentialResponse
-      });
-      google.accounts.id.renderButton(
-        document.getElementById("g_id_signin"),
-        { theme: "filled_blue", size: "large", type: "standard", shape: "pill", width: 280 }
-      );
+      const btnEl = document.getElementById("g_id_signin");
+      if (btnEl) {
+        isGoogleInitialized = true;
+        google.accounts.id.initialize({
+          client_id: clientId,
+          callback: handleCredentialResponse,
+          auto_select: false,
+          itp_support: true
+        });
+        google.accounts.id.renderButton(
+          btnEl,
+          { theme: "filled_blue", size: "large", type: "standard", shape: "pill", width: 280 }
+        );
+      }
     } else {
       setTimeout(initGoogleSignIn, 300);
     }
