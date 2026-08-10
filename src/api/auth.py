@@ -52,26 +52,34 @@ def get_current_user(request: Request) -> str:
 
 @router.get("/config")
 async def get_auth_config():
+    load_dotenv(override=True)
     client_id = os.environ.get("GOOGLE_CLIENT_ID", "")
     return {"google_client_id": client_id}
 
 @router.post("/google")
 async def google_login(payload: GoogleTokenRequest, response: Response):
+    load_dotenv(override=True)
     client_id = os.environ.get("GOOGLE_CLIENT_ID", "")
     allowed_emails = os.environ.get("ALLOWED_EMAILS", "")
     secret_key = os.environ.get("SESSION_SECRET_KEY", "secret_random_visitor_counter_wondrx_2026_key")
 
     if not client_id:
+        print("[AUTH ERROR] GOOGLE_CLIENT_ID is not configured in .env file.")
         raise HTTPException(status_code=500, detail="GOOGLE_CLIENT_ID not configured on server")
 
     id_info = verify_google_id_token(payload.token, client_id)
     if not id_info:
+        print("[AUTH ERROR] Failed to verify Google ID token.")
         raise HTTPException(status_code=400, detail="Invalid Google token")
 
     email = id_info.get("email")
+    print(f"[AUTH INFO] Login attempt from email: {email}")
+
     if not email or not is_email_allowed(email, allowed_emails):
+        print(f"[AUTH WARNING] Access denied. Email '{email}' is not in the whitelist: '{allowed_emails}'")
         raise HTTPException(status_code=403, detail="Email is not authorized to access this application")
 
+    print(f"[AUTH SUCCESS] Email '{email}' verified and logged in successfully.")
     session_token = create_session_token(email, secret_key)
     response.set_cookie(
         key="session",
